@@ -3,6 +3,10 @@ uses
   Graphics,
   Controls, Forms, Dialogs, System, System.Diagnostics, Math;
 
+var
+  Options: array [0 .. 5] of Boolean;
+  Chord: TCoord;
+
 function DetectAngle(V: Single; maxdelta: Single = 10): Integer;
 var
   i, ii: Integer;
@@ -169,17 +173,17 @@ var
   v1x, v1y, v2x, v2y, v3x, v3y: Single;
   a, a_1, a_2, a_3: Single;
   PrevI, NextI, NextNextI: Integer;
-  chord, mmnr: Single;
+  _chord, mmnr: Single;
   l1, l2, l3: Single;
   MinAngle: Single;
   MinEdgeLengthMMs: Single;
 begin
-  chord := 1.5;
-  mmnr := chord / sqrt(2);
+  _chord := CoordToMMs(Chord);
+  mmnr := _chord / sqrt(2);
   nr := MMsToCoord(mmnr);
 
   MinAngle := 10;
-  MinEdgeLengthMMs := chord * 2.5;
+  MinEdgeLengthMMs := _chord * 2.5;
   i := 0;
   while (i < Polygon.PointCount) do
   begin
@@ -219,8 +223,8 @@ begin
     PolygonRpt.Add(' A3: ' + FloatToStr(a_3));
     PolygonRpt.Add(' L: ' + FloatToStr(l2));
 
-    chord := 1.5;
-    mmnr := chord / sqrt(2);
+    _chord := CoordToMMs(Chord);
+    mmnr := _chord / sqrt(2);
     nr := MMsToCoord(mmnr);
 
     if (Polygon.Segments[PrevI].Kind = ePolySegmentLine) and
@@ -346,7 +350,7 @@ var
   v1x, v1y, v2x, v2y, v3x, v3y: Single;
   a, a_1, a_2, a_3: Single;
   PrevI, NextI, NextNextI: Integer;
-  chord, mmnr: Single;
+  _chord, mmnr: Single;
   l1, l2, l3: Single;
   MinAngle: Single;
 begin
@@ -420,7 +424,7 @@ var
   v1x, v1y, v2x, v2y, v3x, v3y: Single;
   a, a_1, a_2, a_3: Single;
   PrevI, NextI, NextNextI: Integer;
-  chord, mmnr: Single;
+  _chord, mmnr: Single;
   l1, l2, l3: Single;
 begin
   i := 0;
@@ -442,8 +446,8 @@ begin
     l1 := VectorLength(v1x, v1y);
     l2 := VectorLength(v2x, v2y);
 
-    chord := 1.5;
-    mmnr := chord / sqrt(2);
+    _chord := CoordToMMs(Chord);
+    mmnr := _chord / sqrt(2);
     nr := MMsToCoord(mmnr);
 
     if (Polygon.Segments[PrevI].Kind = ePolySegmentLine) and
@@ -634,7 +638,7 @@ var
   v1x, v1y, v2x, v2y, v3x, v3y: Single;
   a, a_1, a_2, a_3: Single;
   PrevI, NextI, NextNextI: Integer;
-  chord, mmnr: Single;
+  _chord, mmnr: Single;
   l1, l2, l3: Single;
 begin
   // Segments of a polygon
@@ -652,8 +656,8 @@ begin
       // PolygonRpt.Add(' Polygon Segment Center at X: ' + FloatToStr(CoordToMMs(Polygon.Segments[I].cx)));
       // PolygonRpt.Add(' Polygon Segment Center at Y: ' + FloatToStr(CoordToMMs(Polygon.Segments[I].cy)));
 
-      chord := 1.5;
-      mmnr := chord / sqrt(2);
+      _chord := CoordToMMs(Chord);
+      mmnr := _chord / sqrt(2);
       nr := MMsToCoord(mmnr);
 
       // Polygon.Segments[I].Radius := MMsToCoord(1);
@@ -918,31 +922,136 @@ begin
     Inc(PolyNo);
     PolygonRpt.Add('Polygon No : ' + IntToStr(PolyNo));
 
-    ProcessTooth(Polygon, PolygonRpt);
-    ProcessDots(Polygon, PolygonRpt);
-    ProcessBevel(Polygon, PolygonRpt);
-    ProcessAlign(Polygon, PolygonRpt);
-    ProcessCorner(Board, Polygon, PolygonRpt);
-    ProcessRadius(Polygon, PolygonRpt);
+    if Options[0] then
+      ProcessTooth(Polygon, PolygonRpt);
+    if Options[1] then
+      ProcessDots(Polygon, PolygonRpt);
+    if Options[2] then
+      ProcessBevel(Polygon, PolygonRpt);
+    if Options[3] then
+      ProcessAlign(Polygon, PolygonRpt);
+    if Options[4] then
+      ProcessCorner(Board, Polygon, PolygonRpt);
+    if Options[5] then
+      ProcessRadius(Polygon, PolygonRpt);
 
     Polygon.Rebuild;
     Polygon := Iterator.NextPCBObject;
   end;
   Board.BoardIterator_Destroy(Iterator);
 
-  // The TStringList contains Polygon data and is saved as
-  // a text file.
-  FileName := ChangeFileExt(Board.FileName, '.pol');
-  PolygonRpt.SaveToFile(FileName);
-  PolygonRpt.Free;
+  // [!!!] Debug only
+  if (false) then
+  begin
 
-  // Display the Polygons report
-  Document := Client.OpenDocument('Text', FileName);
-  if Document <> Nil then
-    Client.ShowDocument(Document);
+    // The TStringList contains Polygon data and is saved as
+    // a text file.
+    FileName := ChangeFileExt(Board.FileName, '.pol');
+    PolygonRpt.SaveToFile(FileName);
+    PolygonRpt.Free;
+
+    // Display the Polygons report
+    Document := Client.OpenDocument('Text', FileName);
+    if Document <> Nil then
+      Client.ShowDocument(Document);
+  end;
 end;
 
-procedure CalculatePolyRegionArea;
+procedure CalculatePolyRegionArea(Dummy: String = '');
 begin
   IteratePolygons;
+end;
+
+function ConfigFilename(Dummy: String = ''): String;
+begin
+  Result := ClientAPI_SpecialFolder_AltiumApplicationData +
+    '\RoundTheCorner.ini'
+end;
+
+procedure WriteToIniFile(AFileName: String);
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(AFileName);
+
+  IniFile.WriteInteger('Window', 'Top', MainFrm.Top);
+  IniFile.WriteInteger('Window', 'Left', MainFrm.Left);
+
+  IniFile.WriteBool('General', 'Option1', CheckBox1.Checked);
+  IniFile.WriteBool('General', 'Option2', CheckBox2.Checked);
+  IniFile.WriteBool('General', 'Option3', CheckBox3.Checked);
+  IniFile.WriteBool('General', 'Option4', CheckBox4.Checked);
+  IniFile.WriteBool('General', 'Option5', CheckBox5.Checked);
+  IniFile.WriteBool('General', 'Option6', CheckBox6.Checked);
+
+  IniFile.WriteString('General', 'Chord', ChordEdt.Text);
+
+  IniFile.Free;
+end;
+
+procedure ReadFromIniFile(AFileName: String);
+var
+  IniFile: TIniFile;
+begin
+  IniFile := TIniFile.Create(AFileName);
+
+  MainFrm.Top := IniFile.ReadInteger('Window', 'Top', MainFrm.Top);
+  MainFrm.Left := IniFile.ReadInteger('Window', 'Left', MainFrm.Left);
+
+  CheckBox1.Checked := IniFile.ReadString('General', 'Option1',
+    CheckBox1.Checked);
+  CheckBox2.Checked := IniFile.ReadString('General', 'Option2',
+    CheckBox2.Checked);
+  CheckBox3.Checked := IniFile.ReadString('General', 'Option3',
+    CheckBox3.Checked);
+  CheckBox4.Checked := IniFile.ReadString('General', 'Option4',
+    CheckBox4.Checked);
+  CheckBox5.Checked := IniFile.ReadString('General', 'Option5',
+    CheckBox5.Checked);
+  CheckBox6.Checked := IniFile.ReadString('General', 'Option6',
+    CheckBox6.Checked);
+
+  ChordEdt.Text := IniFile.ReadString('General', 'Chord', ChordEdt.Text);
+
+  IniFile.Free;
+end;
+
+procedure RunGUI;
+begin
+  MainFrm.ShowModal;
+end;
+
+procedure TMainFrm.RunBtnClick(Sender: TObject);
+var
+  Board: IPCB_Board;
+  DisplayUnit: TUnit;
+begin
+  // Retrieve the current board
+  Board := PCBServer.GetCurrentPCBBoard;
+  if Board = Nil then
+    Exit;
+
+  Options[0] := CheckBox1.Checked;
+  Options[1] := CheckBox2.Checked;
+  Options[2] := CheckBox3.Checked;
+  Options[3] := CheckBox4.Checked;
+  Options[4] := CheckBox5.Checked;
+  Options[5] := CheckBox6.Checked;
+
+  DisplayUnit := Board.DisplayUnit;
+  StringToCoordUnit(ChordEdt.Text, Chord, DisplayUnit);
+
+  CalculatePolyRegionArea('');
+
+  Close;
+end;
+
+procedure TMainFrm.MainFrmClose(Sender: TObject; var Action: TCloseAction);
+begin
+  WriteToIniFile(ConfigFilename);
+end;
+
+procedure TMainFrm.MainFrmCreate(Sender: TObject);
+begin
+  ReadFromIniFile(ConfigFilename);
 end;
