@@ -13,4 +13,4 @@ In my company one of pcb best practice is all polygon corners must be round. And
 ## Features
 Basic features could be illustrated with this animation step by step:
 
-![GUI Steps](GUI_Steps.gif)
+![GUI Features](GUI_Features.gif)
