@@ -12,30 +12,30 @@ In my company one of pcb best practice is all polygon corners must be round. And
 
 ## Features
 Basic features could be illustrated with this screens step by step:
-0. Original Polygon
+1. Original Polygon
 
-![GUI Step 0](GUI_Step0_POI.png)
+![GUI Step 1](GUI_Step0_POI.png)
 
-1. Remove Small Edges
+2. Remove Small Edges
 
-![GUI Step 1](GUI_Step1_POI.png)
+![GUI Step 2](GUI_Step1_POI.png)
 
-2. Remove Redundant Vertices
+3. Remove Redundant Vertices
 
-![GUI Step 2](GUI_Step2_POI.png)
+![GUI Step 3](GUI_Step2_POI.png)
 
-3. Unwrap Bevels
+4. Unwrap Bevels
 
-![GUI Step 3](GUI_Step3_POI.png)
+![GUI Step 4](GUI_Step3_POI.png)
 
-4. Aling To Axis
+5. Aling To Axis
 
-![GUI Step 4](GUI_Step4_POI.png)
+![GUI Step 5](GUI_Step4_POI.png)
 
-5. Round Corners
+6. Round Corners
 
-![GUI Step 5](GUI_Step5_POI.png)
+![GUI Step 6](GUI_Step5_POI.png)
 
-6. Equalize Radius
+7. Equalize Radius
 
-![GUI Step 6](GUI_Step6_POI.png)
+![GUI Step 7](GUI_Step6_POI.png)
