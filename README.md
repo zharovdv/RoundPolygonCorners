@@ -1,4 +1,4 @@
-# Round The Corner
+# Round Polygon Corners
 Iterates through each polygon and make it corners round.
 
 ## Motivation
